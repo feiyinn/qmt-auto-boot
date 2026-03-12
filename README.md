@@ -36,6 +36,8 @@
 
 3. Windows 已自动登录到桌面
    - 这类 UI 自动化依赖交互式桌面会话
+   - 微软官方的 windows 自动登录设置
+     - https://learn.microsoft.com/en-us/sysinternals/downloads/autologon
 
 ## 手动测试
 
