@@ -243,6 +243,24 @@ class QMTAutoLogin:
         send_keys(text, with_spaces=True, pause=0.05)
         logging.info("%s 已通过当前焦点输入", field_name)
 
+    def _focus_edit_control(self, edit, field_name):
+        if edit is None:
+            logging.info("%s 不存在，跳过聚焦", field_name)
+            return
+
+        try:
+            edit.set_focus()
+            logging.info("%s 已通过 set_focus() 重新聚焦", field_name)
+            return
+        except Exception as e:
+            logging.info("%s set_focus() 失败，改用 click_input(): %s", field_name, e)
+
+        try:
+            edit.click_input()
+            logging.info("%s 已通过 click_input() 重新聚焦", field_name)
+        except Exception as e:
+            logging.info("%s click_input() 聚焦失败: %s", field_name, e)
+
     def _click_login_button(self, dlg):
         self._activate_window(dlg)
         button = self._get_login_button(dlg)
@@ -846,6 +864,7 @@ class QMTAutoLogin:
             logging.info("等待验证码加载和自动填充 %s 秒...", LOGIN_SUBMIT_DELAY_SECONDS)
             time.sleep(LOGIN_SUBMIT_DELAY_SECONDS)
             self._click_refresh_captcha(dlg, captcha_edit=captcha_edit)
+            self._focus_edit_control(captcha_edit, "验证码框")
             logging.info("刷新验证码后等待 %s 秒...", POST_REFRESH_DELAY_SECONDS)
             time.sleep(POST_REFRESH_DELAY_SECONDS)
 
