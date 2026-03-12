@@ -1,0 +1,3 @@
+# 账号 ID 建议全部加引号，避免被 YAML 当成数字
+ACCOUNT_ID_PROD1: '12345678'
+QMT_PASS: '123456'
