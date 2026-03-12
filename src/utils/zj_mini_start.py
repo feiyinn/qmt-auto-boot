@@ -206,9 +206,12 @@ class QMTAutoLogin:
 
     def _fill_edit_control(self, edit, text, field_name):
         try:
-            edit.set_focus()
-        except Exception:
             edit.click_input()
+        except Exception:
+            try:
+                edit.set_focus()
+            except Exception:
+                pass
 
         try:
             edit.set_edit_text(str(text))
@@ -412,32 +415,32 @@ class QMTAutoLogin:
     def _read_arithmetic_captcha(self, dlg):
         """读取并识别算术验证码，支持直接读文本控件或 OCR 截图"""
         # 策略A：尝试直接在文本控件里找算术题
-        try:
-            for control in (
-                dlg.descendants(control_type="Text")
-                + dlg.descendants(control_type="Static")
-                + dlg.descendants(control_type="Image")
-            ):
-                try:
-                    name = control.element_info.name or ""
-                    try:
-                        text = control.window_text() or ""
-                    except:
-                        text = ""
+        # try:
+        #     for control in (
+        #         dlg.descendants(control_type="Text")
+        #         + dlg.descendants(control_type="Static")
+        #         + dlg.descendants(control_type="Image")
+        #     ):
+        #         try:
+        #             name = control.element_info.name or ""
+        #             try:
+        #                 text = control.window_text() or ""
+        #             except:
+        #                 text = ""
 
-                    combined = f"{name} {text}"
-                    result = self._solve_arithmetic(combined)
-                    if result is not None:
-                        logging.info(
-                            "直接通过文本控件识别出验证码: %s -> 答案 = %s",
-                            combined,
-                            result,
-                        )
-                        return result, control
-                except Exception:
-                    continue
-        except Exception as e:
-            logging.warning("策略A(文本扫描)失败: %s", e)
+        #             combined = f"{name} {text}"
+        #             result = self._solve_arithmetic(combined)
+        #             if result is not None:
+        #                 logging.info(
+        #                     "直接通过文本控件识别出验证码: %s -> 答案 = %s",
+        #                     combined,
+        #                     result,
+        #                 )
+        #                 return result, control
+        #         except Exception:
+        #             continue
+        # except Exception as e:
+        #     logging.warning("策略A(文本扫描)失败: %s", e)
 
         # 策略B：使用 OCR 截图识别
         if not self.ocr:
@@ -792,7 +795,18 @@ class QMTAutoLogin:
             # 我们找最后一个 Edit 控件，通常是验证码
             captcha_edit = edit_controls[-1]
 
+            logging.info(
+                "等待验证码加载和自动填充 %s 秒...", LOGIN_SUBMIT_DELAY_SECONDS
+            )
             time.sleep(LOGIN_SUBMIT_DELAY_SECONDS)
+
+            self._click_refresh_captcha(dlg)
+            try:
+                captcha_edit.click_input()
+            except Exception:
+                pass
+            logging.info("刷新验证码后等待 %s 秒...", POST_REFRESH_DELAY_SECONDS)
+            time.sleep(POST_REFRESH_DELAY_SECONDS)
 
             max_retries = 3
             success_answer = None
@@ -807,6 +821,10 @@ class QMTAutoLogin:
 
                 logging.warning("未能识别出算术表达式，点击刷新验证码重试...")
                 self._click_refresh_captcha(dlg, captcha_image_ctrl=img_ctrl)
+                try:
+                    captcha_edit.click_input()
+                except Exception:
+                    pass
                 time.sleep(POST_REFRESH_DELAY_SECONDS)
 
             if success_answer is None:
