@@ -6,6 +6,7 @@
 
 - `start_miniqmt.ps1`
   - 根据本地部署配置选择券商，并调用对应的 miniQMT 启动脚本
+  - miniQMT 登录完成后，会优先在新的可见 `pwsh` 窗口中自动启动项目主程序 `python main.py`，若系统未安装 `pwsh`，则回退到 Windows PowerShell
 
 - `stop_miniqmt.ps1`
   - 根据本地部署配置选择券商，并调用对应的 miniQMT 停止脚本
@@ -78,6 +79,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\create_start_task.ps1
 
 - 写入本地部署配置 `config\miniqmt_deploy.local.json`
 - 创建登录自启动任务
+- 用户登录桌面后先启动 miniQMT，随后在独立可见窗口中自动拉起 `python main.py`
 
 注意：
 
@@ -153,5 +155,5 @@ Unregister-ScheduledTask -TaskName "Daily shutdown with miniQMT stop" -Confirm:$
 ## 建议
 
 - 首次创建计划任务后，先手动执行一次检查脚本确认任务已落地
-- 再手动重启机器，确认“自动登录桌面 -> 自动启动 miniQMT”整条链路工作正常
+- 再手动重启机器，确认“自动登录桌面 -> 自动启动 miniQMT -> 自动启动 `python main.py`”整条链路工作正常
 - 定时关机建议先设置在一个便于观察的时间点做一次演练

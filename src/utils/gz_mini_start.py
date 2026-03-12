@@ -796,7 +796,7 @@ class QMTAutoLogin:
             qmt_pids = get_running_qmt_pids()
             if not qmt_pids:
                 logging.info("未检测到运行中的 XtMiniQmt.exe，无需停止")
-                return
+                return True
 
             logging.info("检测到运行中的 QMT 进程: %s", qmt_pids)
             target = self._pick_best_qmt_window(process_ids=qmt_pids)
@@ -817,12 +817,14 @@ class QMTAutoLogin:
 
             if self._wait_qmt_exit(qmt_pids, timeout=15):
                 logging.info("QMT/miniQMT 已成功停止")
-                return
+                return True
 
             logging.warning("QMT 未在超时内退出，执行强制结束进程")
             os.system("taskkill /F /IM XtMiniQmt.exe /T >nul 2>&1")
+            return True
         except Exception as e:
             logging.exception("停止 QMT 时发生异常: %s", e)
+            return False
 
     def login(self):
         try:
@@ -876,14 +878,18 @@ class QMTAutoLogin:
             if self.check_success():
                 msg = f"{datetime.now()} QMT/miniQMT 登录成功"
                 logging.info(msg)
-                if self.notify: self.notify(msg)
+                if self.notify:
+                    self.notify(msg)
+                return True
             else:
                 raise Exception("超时未检测到主界面，登录可能失败")
 
         except Exception as e:
             error_msg = f"登录异常: {str(e)}"
             logging.exception(error_msg)
-            if self.notify: self.notify(error_msg)
+            if self.notify:
+                self.notify(error_msg)
+            return False
 
     def check_success(self):
         """检测登录后的主窗口是否出现"""
@@ -911,8 +917,8 @@ if __name__ == "__main__":
         bot.user = user
         bot.password = password
         logging.info("已从本地配置读取账号: %s", DEFAULT_ACCOUNT_KEY)
-        bot.login()
+        sys.exit(0 if bot.login() else 1)
     elif action == "stop":
-        bot.stop()
+        sys.exit(0 if bot.stop() else 1)
     else:
         raise ValueError(f"不支持的动作: {action}，仅支持 start / stop")
