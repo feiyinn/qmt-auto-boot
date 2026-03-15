@@ -262,12 +262,11 @@ function Read-ShutdownTime {
         return $defaultTime
     }
 
-    $parsed = $null
-    if (-not [DateTime]::TryParseExact($raw, "HH:mm", $null, [System.Globalization.DateTimeStyles]::None, [ref]$parsed)) {
+    if ($raw -notmatch '^(?:[01]\d|2[0-3]):[0-5]\d$') {
         throw "关机时间格式无效，请输入 HH:mm，例如 23:00 或 22:30。"
     }
 
-    return $parsed.ToString("HH:mm")
+    return $raw
 }
 
 function Register-DailyShutdownTask {
